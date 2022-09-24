@@ -64,6 +64,6 @@ if __name__ == "__main__":
         executor.map(get_gk_data, score_links)
     print(len(gk_l))
     shooting_df = pd.concat(gk_l, ignore_index=True)
-    shooting_df.to_csv(os.path.join(os.path.realpath("./data/"), r"goalkeeping.csv"))
+    shooting_df.to_csv(os.path.join(os.path.realpath("./data/fbref_data/"), r"goalkeeping.csv"))
     end = time.time()
     print(f"Time taken to run: {end - start} seconds")

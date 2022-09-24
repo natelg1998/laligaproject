@@ -26,6 +26,7 @@ def get_score_links():
     team_ids = [l.rsplit("/", 1)[0] for l in team_urls]
     team_stats = [t.rsplit("/", 1)[-1] for t in team_urls]
     score_stats = [f"{l}/{year}/{d}" for l in team_ids for year in years for d in team_stats]
+    score_stats = [*set(score_stats)]
     return score_stats
 
 scores = []
@@ -45,8 +46,8 @@ if __name__ == "__main__":
     with ThreadPoolExecutor(max_workers = 7) as executor:
         executor.map(get_scores_fixtures, score_links)
     print(len(scores))
-    scores_df = pd.concat(scores)
-    scores_df.to_csv(os.path.join(os.path.realpath("./data/"), r"scores.csv"))
+    scores_df = pd.concat(scores, ignore_index = True)
+    scores_df.to_csv(os.path.join(os.path.realpath("./data/fbref_data/"), r"scores.csv"))
     end = time.time()
     print(f"Time taken to run: {end - start} seconds")
 # Time taken to run: 2173.9899361133575 seconds - 25 workers

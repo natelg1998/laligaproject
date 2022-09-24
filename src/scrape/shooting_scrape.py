@@ -35,6 +35,7 @@ def get_shooting_data(url):
     shoot_links = [l.get("href") for l in shoot_links]
     shoot_links = [l for l in shoot_links if l and "all_comps/shooting" in l]
     shoot_urls = [f"https://fbref.com{l}" for l in shoot_links]
+    shoot_urls = [*set(shoot_urls)]
     for url in shoot_urls:
         data = requests.get(url)
         shooting = pd.read_html(data.text, match="Shooting")[0]
@@ -52,7 +53,7 @@ if __name__ == "__main__":
     with ThreadPoolExecutor(max_workers = 7) as executor:
         executor.map(get_shooting_data, score_links)
     print(len(shoot_l))
-    shooting_df = pd.concat(shoot_l)
-    shooting_df.to_csv(os.path.join(os.path.realpath("./data/"), r"shooting.csv"))
+    shooting_df = pd.concat(shoot_l, ignore_index = True)
+    shooting_df.to_csv(os.path.join(os.path.realpath("./data/fbref_data/"), r"shooting.csv"))
     end = time.time()
     print(f"Time taken to run: {end - start} seconds")
