@@ -5,14 +5,19 @@ import time
 import os
 from pprint import pprint
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from database.database_config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST
+import psycopg2
+from sqlalchemy import create_engine
 
 years = ["2022-2023", "2021-2022", "2020-2021", "2019-2020", "2019-2020", "2018-2019",
          "2017-2018", "2016-2017", "2015-2016", "2014-2015", "2013-2014", "2012-2013",
          "2011-2012", "2010-2011", "2009-2010", "2008-2009", "2007-2008", "2006-2007",
          "2005-2006", "2004-2005", "2003-2004", "2002-2003", "2001-2002", "2000-2001"]
-
+# years = list(range(2022, , -1))
 url = "https://fbref.com/en/comps/12/La-Liga-Stats"
-
+# conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, host=DB_HOST)
+db = create_engine(f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}")
+conn = db.connect()
 
 def get_score_links():
     global url
@@ -55,6 +60,8 @@ if __name__ == "__main__":
         executor.map(get_scores_fixtures, score_links)
     print(len(scores))
     scores_df = pd.concat(scores, ignore_index = True)
+    scores_df.drop(["Match Report", "Notes"], axis=1, inplace=True)  # Do not need these
     scores_df.to_csv(os.path.join(os.path.realpath("./data/fbref_data/"), r"scores_overall.csv"))
+    scores_df.to_sql('scores_overall', con=conn, schema='laliga', if_exists='replace', index=False)
     end = time.time()
     print(f"Time taken to run: {end - start} seconds")
