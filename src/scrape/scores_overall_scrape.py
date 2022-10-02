@@ -61,7 +61,13 @@ if __name__ == "__main__":
     print(len(scores))
     scores_df = pd.concat(scores, ignore_index = True)
     scores_df.drop(["Match Report", "Notes"], axis=1, inplace=True)  # Do not need these
+    scores_df.columns = ['_week_', '_day_', '_date_', '_time_', 'home', 'score', 'away',
+                         'attendance', 'venue', 'referee', 'xg_home', 'xg_away']
+    scores_df = scores_df[scores_df['_time_'].notna()]
     scores_df.to_csv(os.path.join(os.path.realpath("./data/fbref_data/"), r"scores_overall.csv"))
     scores_df.to_sql('scores_overall', con=conn, schema='laliga', if_exists='replace', index=False)
+    conn.execute('''ALTER TABLE laliga.scores_overall
+                        ADD PRIMARY KEY (_day_, _date_, _time_, home, away);''')
+    conn.close()
     end = time.time()
     print(f"Time taken to run: {end - start} seconds")
