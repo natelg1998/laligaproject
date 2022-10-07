@@ -5,13 +5,40 @@ import time
 import os
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from pprint import pprint
+from database.database_config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST
+import psycopg2
+from sqlalchemy import create_engine
 
-years = ["2022-2023", "2021-2022", "2020-2021", "2019-2020", "2019-2020", "2018-2019",
-         "2017-2018", "2016-2017", "2015-2016", "2014-2015", "2013-2014", "2012-2013",
-         "2011-2012", "2010-2011", "2009-2010", "2008-2009", "2007-2008", "2006-2007",
-         "2005-2006", "2004-2005", "2003-2004", "2002-2003", "2001-2002", "2000-2001"]
-# years = list(range(2022, , -1))
+years = [
+    "2022-2023",
+    "2021-2022",
+    "2020-2021",
+    "2019-2020",
+    "2019-2020",
+    "2018-2019",
+    "2017-2018",
+    "2016-2017",
+    "2015-2016",
+    "2014-2015",
+    "2013-2014",
+    "2012-2013",
+    "2011-2012",
+    "2010-2011",
+    "2009-2010",
+    "2008-2009",
+    "2007-2008",
+    "2006-2007",
+    "2005-2006",
+    "2004-2005",
+    "2003-2004",
+    "2002-2003",
+    "2001-2002",
+    "2000-2001",
+]
+
 url = "https://fbref.com/en/comps/12/La-Liga-Stats"
+db = create_engine(f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}")
+conn = db.connect()
 
 
 def get_score_links():
@@ -21,7 +48,7 @@ def get_score_links():
         data = requests.get(url)
         soup = BeautifulSoup(data.text, "lxml")
         league_table = soup.select("table.stats_table")[0]
-        squad_links = league_table.find_all('a')
+        squad_links = league_table.find_all("a")
         squad_links = [l.get("href") for l in squad_links]
         squad_links = [l for l in squad_links if "/en/squads" in l]
         # squad_links_year = [f"{l.rsplit('/',1)[0]}/{year}/{l.rsplit('/',1)[-1]}" for l in squad_links for year in years]
@@ -31,11 +58,14 @@ def get_score_links():
         teams.extend(team_urls)
     return teams
 
+
 goal_and_shot = []
+
+
 def get_goals_and_shots_data(url):
     data = requests.get(url)
     soup = BeautifulSoup(data.text, "lxml")
-    gs_links = soup.find_all('a')
+    gs_links = soup.find_all("a")
     gs_links = [l.get("href") for l in gs_links]
     gs_links = [l for l in gs_links if l and "en/squads" in l]
     gs_links = [l for l in gs_links if l and "matchlogs/all_comps/gca" in l]
@@ -44,13 +74,17 @@ def get_goals_and_shots_data(url):
     gs_urls_clean = [l for l in gs_urls if l != []]
     for url in gs_urls:
         data = requests.get(url)
-        team_name = url.split("/")[-1].replace("-Match-Logs-All-Competitions", "").replace("-", " ")
+        team_name = (
+            url.split("/")[-1]
+            .replace("-Match-Logs-All-Competitions", "")
+            .replace("-", " ")
+        )
         goalshots = pd.read_html(data.text, match="Goal and Shot Creation")[0]
         # Pandas concat function does not like duplicate column names
         # To resolve this issue, we had to transform the multi-index level columns that were not for the team to append
         # the first level multindex title, i.e Performance, to the column name, then drop an index level, and update those column names we need
         cols = goalshots.columns
-        cols_to_update = ['_'.join(w) for w in cols[10:]]
+        cols_to_update = ["_".join(w) for w in cols[10:]]
         goalshots.columns = goalshots.columns.droplevel()
         goalshots.columns.values[10:] = cols_to_update
         goalshots["Team"] = team_name
@@ -60,13 +94,57 @@ def get_goals_and_shots_data(url):
     print(".", end="", flush=True)
     return
 
+
 if __name__ == "__main__":
     start = time.time()
     score_links = get_score_links()
-    with ThreadPoolExecutor(max_workers = 7) as executor:
+    with ThreadPoolExecutor(max_workers=7) as executor:
         executor.map(get_goals_and_shots_data, score_links)
     print(len(goal_and_shot))
     shooting_df = pd.concat(goal_and_shot, ignore_index=True)
-    shooting_df.to_csv(os.path.join(os.path.realpath("./data/fbref_data/"), r"goalandshotcreate.csv"))
+    shooting_df.drop("Unnamed: 24_level_0_Match Report", axis=1, inplace=True)
+    shooting_df.columns = [
+        "_date_",
+        "_time_",
+        "comp",
+        "round",
+        "_day_",
+        "venue",
+        "_result_",
+        "gf",
+        "ga",
+        "opponent",
+        "sca_types_sca",
+        "sca_types_passlive",
+        "sca_types_passdead",
+        "sca_types_drib",
+        "sca_types_sh",
+        "sca_types_fld",
+        "sca_types_def",
+        "gca_types_gca",
+        "gca_types_passlive",
+        "gca_types_passdead",
+        "gca_types_drib",
+        "gca_types_sh",
+        "gca_types_fld",
+        "gca_types_def",
+        "team",
+    ]
+    shooting_df = shooting_df[shooting_df["_time_"].notna()]
+    shooting_df.to_csv(
+        os.path.join(os.path.realpath("./data/fbref_data/"), r"goalandshotcreate.csv")
+    )
+    shooting_df.to_sql(
+        "goalandshotcreation",
+        con=conn,
+        schema="laliga",
+        if_exists="replace",
+        index=False,
+    )
+    conn.execute(
+        """ALTER TABLE laliga.goalandshotcreation
+                                        ADD PRIMARY KEY (_date_, _time_, _day_, team);"""
+    )
+    conn.close()
     end = time.time()
     print(f"Time taken to run: {end - start} seconds")
