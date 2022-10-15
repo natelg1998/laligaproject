@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from pprint import pprint
 from database.database_config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST
 import psycopg2
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, types
 
 years = [
     "2022-2023",
@@ -145,14 +145,51 @@ if __name__ == "__main__":
         "team",
     ]
     poss_df = poss_df[poss_df["_time_"].notna()]
+    poss_df = poss_df[poss_df["comp"] == "La Liga"]
     poss_df.to_csv(
         os.path.join(os.path.realpath("./data/fbref_data/"), r"possession.csv")
     )
+    sql_data_types = {'_date_' : types.DATE,
+                      '_time_' : types.TIME,
+                      'comp' : types.VARCHAR(50),
+                      'round' : types.VARCHAR(50),
+                      '_day_' : types.VARCHAR(30),
+                      'venue' : types.VARCHAR(100),
+                      '_result_' : types.VARCHAR(20),
+                      'gf' : types.INT,
+                      'ga' : types.INT,
+                      'opponent' : types.VARCHAR(60),
+                      'poss' : types.INT,
+                      'touches': types.INT,
+                      'touches_def_pen' : types.INT,
+                      'touches_def_third' : types.INT,
+                      'touches_mid_third' : types.INT,
+                      'touches_att_third' : types.INT,
+                      'touches_att_pen' : types.INT,
+                      'touches_live' : types.INT,
+                      'dribbles_succ' : types.INT,
+                      'dribbles_att' : types.INT,
+                      'dribbles_succ_percent' : types.FLOAT,
+                      'dribbles_players_num' : types.INT,
+                      'dribbles_megs' : types.INT,
+                      'carries' : types.INT,
+                      'carries_tot_dist' : types.INT,
+                      'carries_prog_dist' : types.INT,
+                      'carries_prog' : types.INT,
+                      'carries_one_third' : types.INT,
+                      'carries_cpa' : types.INT,
+                      'carries_miss' : types.INT,
+                      'carries_dis' : types.INT,
+                      'receiving_target' : types.INT,
+                      'receiving_rec' : types.INT,
+                      'receiving_rec_percent' : types.FLOAT,
+                      'receiving_prog' : types.INT,
+                      'team' : types.VARCHAR(60)}
     poss_df.to_sql(
-        "possession", con=conn, schema="laliga", if_exists="replace", index=False
+        "possession", con=conn, schema="testing", if_exists="replace", index=False, dtype=sql_data_types
     )
     conn.execute(
-        """ALTER TABLE laliga.possession 
+        """ALTER TABLE testing.possession 
                         ADD PRIMARY KEY (_date_, _time_, _day_, team);"""
     )
     conn.close()

@@ -7,7 +7,7 @@ from pprint import pprint
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from database.database_config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST
 import psycopg2
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, types
 
 years = [
     "2022-2023",
@@ -103,14 +103,35 @@ if __name__ == "__main__":
         "team",
     ]
     scores_df = scores_df[scores_df["_time_"].notna()]
+    scores_df = scores_df[scores_df["comp"] == "La Liga"]
     scores_df.to_csv(
         os.path.join(os.path.realpath("./data/fbref_data/"), r"scores.csv")
     )
+
+    sql_data_types = {'_date_': types.DATE,
+                      '_time_': types.TIME,
+                      'comp': types.VARCHAR(50),
+                      'round': types.VARCHAR(50),
+                      '_day_': types.VARCHAR(30),
+                      'venue': types.VARCHAR(100),
+                      '_result_': types.VARCHAR(20),
+                      'gf': types.INT,
+                      'ga': types.INT,
+                      'opponent': types.VARCHAR(60),
+                      'xg': types.FLOAT,
+                      'xga': types.FLOAT,
+                      'poss': types.INT,
+                      'attendance': types.INT,
+                      'captain' : types.VARCHAR(80),
+                      'formation' : types.VARCHAR(50),
+                      'referee' : types.VARCHAR(90),
+                      'team': types.VARCHAR(60)}
+
     scores_df.to_sql(
-        "scores_by_team", con=conn, schema="laliga", if_exists="replace", index=False
+        "scores_by_team", con=conn, schema="testing", if_exists="replace", index=False, dtype= sql_data_types
     )
     conn.execute(
-        """ALTER TABLE laliga.scores_by_team 
+        """ALTER TABLE testing.scores_by_team 
                     ADD PRIMARY KEY (_date_, _time_, _day_, team);"""
     )
     conn.close()

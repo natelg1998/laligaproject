@@ -7,7 +7,7 @@ from pprint import pprint
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from database.database_config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST
 import psycopg2
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, types
 
 years = [
     "2022-2023",
@@ -106,14 +106,30 @@ if __name__ == "__main__":
         "xg_away",
     ]
     scores_df = scores_df[scores_df["_time_"].notna()]
+    scores_df = scores_df[scores_df["home"].notna()]
+    scores_df = scores_df[scores_df["away"].notna()]
     scores_df.to_csv(
         os.path.join(os.path.realpath("./data/fbref_data/"), r"scores_overall.csv")
     )
+
+    sql_data_types = { '_week_' : types.INT,
+                       '_day_': types.VARCHAR(30),
+                      '_date_': types.DATE,
+                      '_time_': types.TIME,
+                      'home': types.VARCHAR(50),
+                       'xg_home': types.FLOAT,
+                      'score': types.VARCHAR(30),
+                       'xg_away': types.FLOAT,
+                       'away': types.VARCHAR(50),
+                       'attendance': types.INT,
+                      'venue': types.VARCHAR(100),
+                       'referee': types.VARCHAR(90)}
+
     scores_df.to_sql(
-        "scores_overall", con=conn, schema="laliga", if_exists="replace", index=False
+        "scores_overall", con=conn, schema="testing", if_exists="replace", index=False, dtype = sql_data_types
     )
     conn.execute(
-        """ALTER TABLE laliga.scores_overall
+        """ALTER TABLE testing.scores_overall
                         ADD PRIMARY KEY (_day_, _date_, _time_, home, away);"""
     )
     conn.close()

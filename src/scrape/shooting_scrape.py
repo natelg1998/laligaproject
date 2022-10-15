@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from pprint import pprint
 from database.database_config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST
 import psycopg2
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, types
 
 years = [
     "2022-2023",
@@ -124,14 +124,42 @@ if __name__ == "__main__":
         "team",
     ]
     shooting_df = shooting_df[shooting_df["_time_"].notna()]
+    shooting_df = shooting_df[shooting_df["comp"] == "La Liga"]
     shooting_df.to_csv(
         os.path.join(os.path.realpath("./data/fbref_data/"), r"shooting.csv")
     )
+    sql_data_types = {'_date_': types.DATE,
+                      '_time_': types.TIME,
+                      'comp': types.VARCHAR(50),
+                      'round': types.VARCHAR(50),
+                      '_day_': types.VARCHAR(30),
+                      'venue': types.VARCHAR(100),
+                      '_result_': types.VARCHAR(20),
+                      'gf': types.INT,
+                      'ga': types.INT,
+                      'opponent': types.VARCHAR(60),
+                      'goals': types.INT,
+                      'shots': types.INT,
+                      'shots_on_target': types.INT,
+                      'shots_on_target_percent': types.FLOAT,
+                      'goals_per_shot': types.FLOAT,
+                      'goals_per_shot_on_target': types.FLOAT,
+                      'distance': types.FLOAT,
+                      'free_kicks': types.INT,
+                      'penalty_kicks': types.INT,
+                      'penalty_kicks_attempt': types.INT,
+                      'xg': types.FLOAT,
+                      'nonpenalty_xg': types.FLOAT,
+                      'nonpenalty_xg_per_shot': types.FLOAT,
+                      'goals_minus_xg': types.FLOAT,
+                      'nonpenalty_goals_minus_xg': types.FLOAT,
+                      'team': types.VARCHAR(60)}
+
     shooting_df.to_sql(
-        "shooting", con=conn, schema="laliga", if_exists="replace", index=False
+        "shooting", con=conn, schema="testing", if_exists="replace", index=False, dtype= sql_data_types
     )
     conn.execute(
-        """ALTER TABLE laliga.shooting 
+        """ALTER TABLE testing.shooting 
                         ADD PRIMARY KEY (_date_, _time_, _day_, team);"""
     )
     conn.close()

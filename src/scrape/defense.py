@@ -140,6 +140,7 @@ if __name__ == "__main__":
         "team",
     ]
     defense_df = defense_df[defense_df["_time_"].notna()]
+    defense_df = defense_df[defense_df["comp"] == "La Liga"]
     defense_df.to_csv(
         os.path.join(os.path.realpath("./data/fbref_data/"), r"defense.csv")
     )
