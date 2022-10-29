@@ -128,10 +128,10 @@ if __name__ == "__main__":
                       'team': types.VARCHAR(60)}
 
     scores_df.to_sql(
-        "scores_by_team", con=conn, schema="testing", if_exists="replace", index=False, dtype= sql_data_types
+        "scores_by_team", con=conn, schema="laliga", if_exists="replace", index=False, dtype= sql_data_types
     )
     conn.execute(
-        """ALTER TABLE testing.scores_by_team 
+        """ALTER TABLE laliga.scores_by_team 
                     ADD PRIMARY KEY (_date_, _time_, _day_, team);"""
     )
     conn.close()

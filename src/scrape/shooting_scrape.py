@@ -156,10 +156,10 @@ if __name__ == "__main__":
                       'team': types.VARCHAR(60)}
 
     shooting_df.to_sql(
-        "shooting", con=conn, schema="testing", if_exists="replace", index=False, dtype= sql_data_types
+        "shooting", con=conn, schema="laliga", if_exists="replace", index=False, dtype= sql_data_types
     )
     conn.execute(
-        """ALTER TABLE testing.shooting 
+        """ALTER TABLE laliga.shooting 
                         ADD PRIMARY KEY (_date_, _time_, _day_, team);"""
     )
     conn.close()

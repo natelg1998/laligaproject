@@ -126,10 +126,10 @@ if __name__ == "__main__":
                        'referee': types.VARCHAR(90)}
 
     scores_df.to_sql(
-        "scores_overall", con=conn, schema="testing", if_exists="replace", index=False, dtype = sql_data_types
+        "scores_overall", con=conn, schema="laliga", if_exists="replace", index=False, dtype = sql_data_types
     )
     conn.execute(
-        """ALTER TABLE testing.scores_overall
+        """ALTER TABLE laliga.scores_overall
                         ADD PRIMARY KEY (_day_, _date_, _time_, home, away);"""
     )
     conn.close()

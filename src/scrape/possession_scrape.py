@@ -104,7 +104,7 @@ if __name__ == "__main__":
     print(len(poss_l))
     poss_df = pd.concat(poss_l, ignore_index=True)
     poss_df.drop(
-        ["Unnamed: 35_level_0_Match Report"], axis=1, inplace=True
+        ["Unnamed: 25_level_0_Match Report"], axis=1, inplace=True
     )  # Do not need these
     poss_df.columns = [
         "_date_",
@@ -128,19 +128,9 @@ if __name__ == "__main__":
         "dribbles_succ",
         "dribbles_att",
         "dribbles_succ_percent",
-        "dribbles_players_num",
-        "dribbles_megs",
-        "carries",
-        "carries_tot_dist",
-        "carries_prog_dist",
-        "carries_prog",
-        "carries_one_third",
-        "carries_cpa",
-        "carries_miss",
-        "carries_dis",
-        "receiving_target",
+        "dribbles_mis",
+        "dribbles_dis",
         "receiving_rec",
-        "receiving_rec_percent",
         "receiving_prog",
         "team",
     ]
@@ -170,26 +160,16 @@ if __name__ == "__main__":
                       'dribbles_succ' : types.INT,
                       'dribbles_att' : types.INT,
                       'dribbles_succ_percent' : types.FLOAT,
-                      'dribbles_players_num' : types.INT,
-                      'dribbles_megs' : types.INT,
-                      'carries' : types.INT,
-                      'carries_tot_dist' : types.INT,
-                      'carries_prog_dist' : types.INT,
-                      'carries_prog' : types.INT,
-                      'carries_one_third' : types.INT,
-                      'carries_cpa' : types.INT,
-                      'carries_miss' : types.INT,
-                      'carries_dis' : types.INT,
-                      'receiving_target' : types.INT,
+                      'dribbles_mis' : types.INT,
+                      'dribbles_dis' : types.INT,
                       'receiving_rec' : types.INT,
-                      'receiving_rec_percent' : types.FLOAT,
                       'receiving_prog' : types.INT,
                       'team' : types.VARCHAR(60)}
     poss_df.to_sql(
-        "possession", con=conn, schema="testing", if_exists="replace", index=False, dtype=sql_data_types
+        "possession", con=conn, schema="laliga", if_exists="replace", index=False, dtype=sql_data_types
     )
     conn.execute(
-        """ALTER TABLE testing.possession 
+        """ALTER TABLE laliga.possession
                         ADD PRIMARY KEY (_date_, _time_, _day_, team);"""
     )
     conn.close()
