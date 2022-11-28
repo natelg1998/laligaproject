@@ -19,22 +19,9 @@ years = [
     "2017-2018",
     "2016-2017",
     "2015-2016",
-    "2014-2015",
-    "2013-2014",
-    "2012-2013",
-    "2011-2012",
-    "2010-2011",
-    "2009-2010",
-    "2008-2009",
-    "2007-2008",
-    "2006-2007",
-    "2005-2006",
-    "2004-2005",
-    "2003-2004",
-    "2002-2003",
-    "2001-2002",
-    "2000-2001",
+    "2014-2015"
 ]
+
 # years = list(range(2022, , -1))
 url = "https://fbref.com/en/comps/12/La-Liga-Stats"
 # conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, host=DB_HOST)
@@ -65,10 +52,11 @@ def get_score_links():
         previous_season = soup.select("a.prev")[0].get("href")
         url = f"https://fbref.com{previous_season}"
         seasons.extend(team_urls)
+        time.sleep(1)
     return seasons
 
 
-# pprint(get_score_links())
+pprint(get_score_links())
 
 scores = []
 
@@ -79,6 +67,7 @@ def get_scores_fixtures(url):
     # team_name = url.split("/")[-1].replace("-Stats", "").replace("-", " ")
     # matches["Team"] = team_name
     scores.append(matches)
+    time.sleep(1)
     print(".", end="", flush=True)
     return
 
